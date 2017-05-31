@@ -33,14 +33,6 @@
 
 #define ALPHABET_LEN 256
 
-<<<<<<< HEAD
-#define BASEBAND_PART_PATH "/dev/block/platform/7824900.sdhci/by-name/modem"
-#define BASEBAND_VER_STR_START "QC_IMAGE_VERSION_STRING=MPSS.DPM."
-#define BASEBAND_VER_STR_START_LEN 33
-#define BASEBAND_VER_BUF_LEN 255
-#define BASEBAND_SZ 64000 * KB    /* MMAP 64M of BASEBAND, BASEBAND partition is 64M */
-
-=======
 #ifdef USES_BOOTDEVICE_PATH
 #define BASEBAND_PART_PATH "/dev/block/bootdevice/by-name/modem"
 #else
@@ -53,7 +45,6 @@
 #ifdef USES_BOOTDEVICE_PATH
 #define TZ_PART_PATH "/dev/block/bootdevice/by-name/tz"
 #else
->>>>>>> upstream/cm-14.1
 #define TZ_PART_PATH "/dev/block/platform/7824900.sdhci/by-name/tz"
 #endif
 #define TZ_VER_STR "QC_IMAGE_VERSION_STRING="
@@ -141,10 +132,7 @@ static char * bm_search(const char *str, size_t str_len, const char *pat,
 static int get_baseband_version(char *ver_str, size_t len) {
     int ret = 0;
     int fd;
-<<<<<<< HEAD
-=======
     int baseband_size;
->>>>>>> upstream/cm-14.1
     char *baseband_data = NULL;
     char *offset = NULL;
 
@@ -154,9 +142,6 @@ static int get_baseband_version(char *ver_str, size_t len) {
         goto err_ret;
     }
 
-<<<<<<< HEAD
-    baseband_data = (char *) mmap(NULL, BASEBAND_SZ, PROT_READ, MAP_PRIVATE, fd, 0);
-=======
     baseband_size = lseek64(fd, 0, SEEK_END);
     if (baseband_size == -1) {
         ret = errno;
@@ -164,29 +149,20 @@ static int get_baseband_version(char *ver_str, size_t len) {
     }
 
     baseband_data = (char *) mmap(NULL, baseband_size, PROT_READ, MAP_PRIVATE, fd, 0);
->>>>>>> upstream/cm-14.1
     if (baseband_data == (char *)-1) {
         ret = errno;
         goto err_fd_close;
     }
 
     /* Do Boyer-Moore search across BASEBAND data */
-<<<<<<< HEAD
-    offset = bm_search(baseband_data, BASEBAND_SZ, BASEBAND_VER_STR_START, BASEBAND_VER_STR_START_LEN);
-=======
     offset = bm_search(baseband_data, baseband_size, BASEBAND_VER_STR_START, BASEBAND_VER_STR_START_LEN);
->>>>>>> upstream/cm-14.1
     if (offset != NULL) {
         strncpy(ver_str, offset + BASEBAND_VER_STR_START_LEN, len);
     } else {
         ret = -ENOENT;
     }
 
-<<<<<<< HEAD
-    munmap(baseband_data, BASEBAND_SZ);
-=======
     munmap(baseband_data, baseband_size);
->>>>>>> upstream/cm-14.1
 err_fd_close:
     close(fd);
 err_ret:
@@ -236,36 +212,10 @@ err_ret:
 /* verify_baseband("BASEBAND_VERSION", "BASEBAND_VERSION", ...) */
 Value * VerifyBasebandFn(const char *name, State *state, int argc, Expr *argv[]) {
     char current_baseband_version[BASEBAND_VER_BUF_LEN];
-<<<<<<< HEAD
-    char *baseband_version;
-=======
->>>>>>> upstream/cm-14.1
     int i, ret;
 
     ret = get_baseband_version(current_baseband_version, BASEBAND_VER_BUF_LEN);
     if (ret) {
-<<<<<<< HEAD
-        return ErrorAbort(state, kVendorFailure, "%s() failed to read current BASEBAND version: %d",
-                name, ret);
-    }
-
-    for (i = 0; i < argc; i++) {
-        baseband_version = Evaluate(state, argv[i]);
-        if (baseband_version < 0) {
-            return ErrorAbort(state, kArgsParsingFailure, "%s() error parsing arguments: %d",
-                name, baseband_version);
-        }
-
-        uiPrintf(state, "Comparing BASEBAND version %s to %s",
-                baseband_version, current_baseband_version);
-        if (strncmp(baseband_version, current_baseband_version, strlen(baseband_version)) == 0) {
-            return StringValue(strdup("1"));
-        }
-    }
-
-    uiPrintf(state, "ERROR: It appears you are running an unsupported baseband.");
-    return StringValue(strdup("0"));
-=======
         return ErrorAbort(state, kFreadFailure, "%s() failed to read current baseband version: %d",
                 name, ret);
     }
@@ -295,7 +245,6 @@ Value * VerifyBasebandFn(const char *name, State *state, int argc, Expr *argv[])
     free(baseband_version);
 
     return StringValue(strdup(ret ? "1" : "0"));
->>>>>>> upstream/cm-14.1
 }
 
 /* verify_trustzone("TZ_VERSION", "TZ_VERSION", ...) */
